@@ -45,6 +45,13 @@
             .canvas-wrapper {
                 flex: 1;
                 min-height: 0;
+                position: relative;
+                width: 100%;
+                padding: 8px;
+                overflow-x: auto;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                background: #e5e5e5;
             }
             
             .toolbar {
@@ -66,16 +73,17 @@
                 border-radius: 8px;
             }
             
-            .canvas-wrapper {
-                padding: 8px;
-                overflow-x: auto;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            
             .canvas {
                 width: 750px;
-                transform-origin: left top;
+                min-height: 500px;
+                background: white;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                border: 2px dashed #ccc;
+            }
+            
+            .module {
+                border: 1px solid #e0e0e0;
+                margin-bottom: 2px;
             }
             
             .module-actions {
@@ -6029,9 +6037,9 @@
             <span class="icon">💾</span>
             <span>保存图片</span>
         </button>
-        <button class="bottom-btn" onclick="showHelp()">
-            <span class="icon">❓</span>
-            <span>帮助</span>
+        <button class="bottom-btn" onclick="debugCanvas()">
+            <span class="icon">🔍</span>
+            <span>调试</span>
         </button>
     </div>
     
@@ -6265,6 +6273,27 @@
                     }
                 }, 100);
             }
+        }
+        
+        // 移动端调试功能
+        function debugCanvas() {
+            const canvas = document.getElementById('canvas');
+            const wrapper = document.querySelector('.canvas-wrapper');
+            const modules = canvas.querySelectorAll('.module');
+            
+            console.log('=== 移动端调试信息 ===');
+            console.log('画布尺寸:', canvas.offsetWidth, 'x', canvas.offsetHeight);
+            console.log('画布位置:', canvas.getBoundingClientRect());
+            console.log('包装器尺寸:', wrapper.clientWidth, 'x', wrapper.clientHeight);
+            console.log('模块数量:', modules.length);
+            
+            if (modules.length > 0) {
+                modules.forEach((m, i) => {
+                    console.log(`模块 ${i}:`, m.getAttribute('data-type'), m.offsetHeight);
+                });
+            }
+            
+            showToast(`画布: ${canvas.offsetWidth}x${canvas.offsetHeight}, 模块: ${modules.length}个`);
         }
         
         // 移动端一键导出到相册
