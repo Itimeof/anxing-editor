@@ -49,11 +49,10 @@
                 position: relative;
                 width: 100%;
                 padding: 8px;
-                overflow-x: auto;
+                overflow-x: hidden;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
                 background: #e5e5e5;
-                border: 2px solid red;
             }
             
             .toolbar {
@@ -79,16 +78,19 @@
             }
             
             .canvas {
-                width: 750px;
+                width: 100%;
+                max-width: 750px;
                 min-height: 500px;
                 background: white;
                 box-shadow: 0 4px 20px rgba(0,0,0,0.1);
                 border: 2px dashed #ccc;
+                margin: 0 auto;
             }
             
             .module {
                 border: 1px solid #e0e0e0;
                 margin-bottom: 2px;
+                width: 100%;
             }
             
             .module-actions {
@@ -3514,7 +3516,7 @@
     
     <!-- 移动端提示 -->
     <div id="mobileHint" style="display: none; position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; z-index: 9999; white-space: nowrap;">
-        👈 左右滑动查看完整画布 👉
+        👇 上下滑动查看完整内容
     </div>
 
     <!-- 工具栏 -->
@@ -4603,6 +4605,7 @@
                     <button class="module-btn" onclick="moveUp(this)" title="上移">↑</button>
                     <button class="module-btn" onclick="moveDown(this)" title="下移">↓</button>
                     <button class="module-btn" onclick="duplicateModule(this)" title="复制">⎘</button>
+                    <button class="module-btn" onclick="exportSingleModule(this)" title="导出">⬇</button>
                     <button class="module-btn delete" onclick="deleteModule(this)" title="删除">×</button>
                 </div>
             `;
@@ -6280,6 +6283,54 @@
             }
         }
         
+        // 导出单个模块
+        async function exportSingleModule(btn) {
+            const module = btn.closest('.module');
+            if (!module) return;
+            
+            showToast('正在导出模块...', 'success');
+            
+            try {
+                // 隐藏操作按钮
+                const actions = module.querySelector('.module-actions');
+                if (actions) actions.style.display = 'none';
+                
+                // 导出单个模块
+                const canvas = await html2canvas(module, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    width: 750,
+                    imageTimeout: 30000
+                });
+                
+                // 恢复操作按钮
+                if (actions) actions.style.display = '';
+                
+                // 生成PNG数据
+                const dataUrl = canvas.toDataURL('image/png', 1.0);
+                
+                // 创建下载链接
+                const link = document.createElement('a');
+                const timestamp = new Date().getTime();
+                const type = module.getAttribute('data-type') || 'module';
+                link.download = `安行山河_${type}_${timestamp}.png`;
+                link.href = dataUrl;
+                
+                // 触发下载
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast(`模块已导出！尺寸: 750x${canvas.height}px`, 'success');
+                
+            } catch (err) {
+                console.error('导出失败:', err);
+                showToast('导出失败：' + err.message, 'error');
+            }
+        }
+        
         // 移动端调试功能
         function debugCanvas() {
             const canvas = document.getElementById('canvas');
@@ -6319,15 +6370,34 @@
                 const actions = canvas.querySelectorAll('.module-actions');
                 actions.forEach(a => a.style.display = 'none');
                 
-                // 移动端优化设置
+                // 计算实际内容高度
+                let maxBottom = 0;
+                modules.forEach(mod => {
+                    const rect = mod.getBoundingClientRect();
+                    const bottom = mod.offsetTop + mod.offsetHeight;
+                    maxBottom = Math.max(maxBottom, bottom);
+                });
+                
+                // 添加一些底部边距
+                const contentHeight = maxBottom + 20;
+                
+                console.log('导出尺寸:', {
+                    width: 750,
+                    contentHeight,
+                    moduleCount: modules.length
+                });
+                
+                // 移动端优化设置 - 只导出内容区域
                 const renderedCanvas = await html2canvas(canvas, {
-                    scale: 2, // 移动端使用2倍清晰度，平衡质量和性能
+                    scale: 2,
                     useCORS: true,
                     allowTaint: true,
                     backgroundColor: '#ffffff',
-                    height: canvas.scrollHeight,
-                    windowHeight: canvas.scrollHeight,
-                    width: canvas.offsetWidth,
+                    height: contentHeight,
+                    windowHeight: contentHeight,
+                    width: 750,
+                    x: 0,
+                    y: 0,
                     imageTimeout: 30000
                 });
                 
@@ -6348,7 +6418,7 @@
                 link.click();
                 document.body.removeChild(link);
                 
-                showToast('图片已导出！请查看下载或长按保存到相册', 'success');
+                showToast(`图片已导出！尺寸: 750x${contentHeight}px`, 'success');
                 
             } catch (err) {
                 console.error('导出失败:', err);
