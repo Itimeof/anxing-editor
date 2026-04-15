@@ -37,6 +37,14 @@
                 margin-left: 0 !important;
                 padding-top: calc(44px + var(--safe-top));
                 padding-bottom: calc(80px + var(--safe-bottom));
+                display: flex;
+                flex-direction: column;
+                height: calc(100vh - 44px - var(--safe-top));
+            }
+            
+            .canvas-wrapper {
+                flex: 1;
+                min-height: 0;
             }
             
             .toolbar {
@@ -3493,7 +3501,7 @@
     
     <!-- 移动端提示 -->
     <div id="mobileHint" style="display: none; position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; z-index: 9999; white-space: nowrap;">
-        👆 左右滑动查看完整画布
+        👈 左右滑动查看完整画布 👉
     </div>
 
     <!-- 工具栏 -->
@@ -6246,20 +6254,8 @@
                     if (modules.length > 0 && wrapper) {
                         const lastModule = modules[modules.length - 1];
                         
-                        // 重新应用缩放（确保新模块也有正确的缩放）
-                        applyMobileScale();
-                        
-                        // 计算模块在缩放后的位置，并手动滚动
-                        const moduleRect = lastModule.getBoundingClientRect();
-                        const wrapperRect = wrapper.getBoundingClientRect();
-                        const scale = (wrapper.clientWidth - 16) / 750;
-                        
-                        // 滚动到模块底部
-                        const moduleBottom = lastModule.offsetTop + lastModule.offsetHeight;
-                        wrapper.scrollTo({
-                            top: moduleBottom * Math.min(scale, 1) - wrapper.clientHeight + 100,
-                            behavior: 'smooth'
-                        });
+                        // 滚动到新模块位置
+                        lastModule.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         
                         // 高亮新模块
                         lastModule.style.animation = 'highlightNew 0.8s ease';
@@ -6267,7 +6263,7 @@
                             lastModule.style.animation = '';
                         }, 800);
                     }
-                }, 150);
+                }, 100);
             }
         }
         
@@ -6332,30 +6328,21 @@
             const wrapper = document.querySelector('.canvas-wrapper');
             
             if (window.innerWidth <= 768 && wrapper && canvas) {
-                // 计算缩放比例，确保750px画布能在小屏幕上完整显示
-                const availableWidth = wrapper.clientWidth - 16;
-                const scale = availableWidth / 750;
-                const finalScale = Math.min(scale, 1); // 最大不放大
-                
-                // 使用 CSS transform 缩放画布
-                canvas.style.transform = `scale(${finalScale})`;
-                canvas.style.transformOrigin = 'left top';
-                
-                // 调整画布宽度以适应缩放后的尺寸
-                // 这样可以让 wrapper 正确计算滚动区域
-                const scaledWidth = 750 * finalScale;
+                // 移动端策略：画布保持 750px 宽度，允许横向滚动
+                // 这样用户可以看到完整的画布内容
+                canvas.style.transform = 'none';
                 canvas.style.width = '750px';
                 canvas.style.maxWidth = 'none';
                 
                 // 确保 wrapper 可以横向滚动
                 wrapper.style.overflowX = 'auto';
+                wrapper.style.overflowY = 'auto';
                 
                 // 添加调试信息到控制台
-                console.log('Mobile scale applied:', {
-                    availableWidth,
-                    scale: finalScale,
+                console.log('Mobile canvas ready:', {
                     canvasWidth: canvas.offsetWidth,
-                    wrapperWidth: wrapper.clientWidth
+                    wrapperWidth: wrapper.clientWidth,
+                    modules: canvas.querySelectorAll('.module').length
                 });
             } else {
                 canvas.style.transform = 'none';
