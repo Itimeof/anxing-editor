@@ -6011,9 +6011,9 @@
             <span class="icon">↩️</span>
             <span>撤销</span>
         </button>
-        <button class="bottom-btn primary" onclick="showExportPanel()">
-            <span class="icon">⬆️</span>
-            <span>导出</span>
+        <button class="bottom-btn primary" onclick="exportToMobileAlbum()">
+            <span class="icon">💾</span>
+            <span>保存图片</span>
         </button>
         <button class="bottom-btn" onclick="showHelp()">
             <span class="icon">❓</span>
@@ -6022,7 +6022,7 @@
     </div>
     
     <!-- 移动端添加按钮 -->
-    <button class="mobile-add-btn" id="mobileAddBtn" onclick="toggleSidebar()" style="display: none;">+</button>
+    <button class="mobile-add-btn" id="mobileAddBtn" onclick="toggleMobileDrawer()" style="display: none;">+</button>
 
     <!-- 移动端模块抽屉 -->
     <div class="mobile-drawer" id="mobileDrawer" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 20px 20px 0 0; z-index: 3000; max-height: 80vh; overflow-y: auto;">
@@ -6032,13 +6032,13 @@
         </div>
         <div style="padding: 16px;">
             <div style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px; padding-bottom: 8px;">
-                <button class="category-tab active" onclick="switchMobileCategory('wechat')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: var(--accent); color: white; white-space: nowrap;">微信</button>
-                <button class="category-tab" onclick="switchMobileCategory('brand')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">品牌</button>
-                <button class="category-tab" onclick="switchMobileCategory('emotion')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">情绪</button>
-                <button class="category-tab" onclick="switchMobileCategory('route')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">路线</button>
-                <button class="category-tab" onclick="switchMobileCategory('trust')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">信任</button>
-                <button class="category-tab" onclick="switchMobileCategory('operate')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">运营</button>
-                <button class="category-tab" onclick="switchMobileCategory('visual')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">视觉</button>
+                <button class="category-tab active" onclick="switchMobileCategory('wechat', this)" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: var(--accent); color: white; white-space: nowrap;">微信</button>
+                <button class="category-tab" onclick="switchMobileCategory('brand', this)" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">品牌</button>
+                <button class="category-tab" onclick="switchMobileCategory('emotion', this)" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">情绪</button>
+                <button class="category-tab" onclick="switchMobileCategory('route', this)" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">路线</button>
+                <button class="category-tab" onclick="switchMobileCategory('trust', this)" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">信任</button>
+                <button class="category-tab" onclick="switchMobileCategory('operate', this)" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">运营</button>
+                <button class="category-tab" onclick="switchMobileCategory('visual', this)" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">视觉</button>
             </div>
             <div id="mobileModuleGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
                 <!-- 动态生成 -->
@@ -6150,15 +6150,24 @@
             }
         }
         
-        // 打开移动端抽屉
-        function toggleSidebar() {
+        // 打开/关闭移动端抽屉
+        function toggleMobileDrawer() {
             const drawer = document.getElementById('mobileDrawer');
             if (drawer) {
-                drawer.style.display = drawer.style.display === 'block' ? 'none' : 'block';
-                if (drawer.style.display === 'block') {
-                    switchMobileCategory('wechat');
+                const isVisible = drawer.style.display === 'block';
+                drawer.style.display = isVisible ? 'none' : 'block';
+                if (!isVisible) {
+                    // 延迟渲染默认分类，确保DOM已准备好
+                    setTimeout(() => {
+                        switchMobileCategory('wechat');
+                    }, 10);
                 }
             }
+        }
+        
+        // 兼容旧代码
+        function toggleSidebar() {
+            toggleMobileDrawer();
         }
         
         // 关闭移动端抽屉
@@ -6167,37 +6176,162 @@
             if (drawer) drawer.style.display = 'none';
         }
         
+        // 当前选中的分类
+        let currentMobileCategory = 'wechat';
+        
         // 切换分类
-        function switchMobileCategory(category) {
+        function switchMobileCategory(category, targetEl) {
+            currentMobileCategory = category;
+            
             // 更新标签样式
             document.querySelectorAll('.category-tab').forEach(tab => {
-                tab.style.background = 'white';
-                tab.style.color = 'inherit';
+                tab.classList.remove('active');
             });
-            event.target.style.background = 'var(--accent)';
-            event.target.style.color = 'white';
+            if (targetEl) {
+                targetEl.classList.add('active');
+            } else {
+                // 如果没有传入元素，通过索引找到对应的标签
+                const tabs = document.querySelectorAll('.category-tab');
+                const categoryIndex = ['wechat', 'brand', 'emotion', 'route', 'trust', 'operate', 'visual'].indexOf(category);
+                if (tabs[categoryIndex]) tabs[categoryIndex].classList.add('active');
+            }
             
             // 渲染模块
             const grid = document.getElementById('mobileModuleGrid');
             const modules = MOBILE_MODULES[category] || [];
             grid.innerHTML = modules.map(m => `
-                <div onclick="addMobileModule('${m.type}')" style="padding: 16px; border: 1px solid var(--border); border-radius: 12px; text-align: center; cursor: pointer; background: white;">
+                <div onclick="addMobileModule('${m.type}')" style="padding: 16px; border: 1px solid var(--border); border-radius: 12px; text-align: center; cursor: pointer; background: white;" class="module-grid-item">
                     <div style="font-size: 28px; margin-bottom: 8px;">${m.icon}</div>
                     <div style="font-size: 13px; font-weight: 500;">${m.name}</div>
                 </div>
             `).join('');
         }
         
-        // 添加模块
+        // 添加模块 - 修复移动端显示问题
         function addMobileModule(type) {
             closeMobileDrawer();
+            
+            // 确保空提示被移除
+            const emptyTip = document.getElementById('emptyTip');
+            if (emptyTip) emptyTip.remove();
+            
+            // 添加模块
             addModule(type);
+            
+            // 延迟滚动到新添加的模块（确保DOM已更新）
+            setTimeout(() => {
+                const canvas = document.getElementById('canvas');
+                const modules = canvas.querySelectorAll('.module');
+                if (modules.length > 0) {
+                    const lastModule = modules[modules.length - 1];
+                    
+                    // 滚动到模块位置
+                    lastModule.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // 高亮新模块
+                    lastModule.style.animation = 'highlightNew 0.8s ease';
+                    setTimeout(() => {
+                        lastModule.style.animation = '';
+                    }, 800);
+                }
+                
+                // 重新应用移动端缩放
+                applyMobileScale();
+            }, 100);
+            
             showToast('已添加模块');
         }
         
+        // 移动端一键导出到相册
+        async function exportToMobileAlbum() {
+            const canvas = document.getElementById('canvas');
+            const modules = canvas.querySelectorAll('.module');
+            
+            if (modules.length === 0) {
+                showToast('请先添加一些模块');
+                return;
+            }
+            
+            // 显示加载提示
+            showToast('正在生成图片，请稍候...', 'success');
+            
+            try {
+                // 隐藏操作按钮
+                const actions = canvas.querySelectorAll('.module-actions');
+                actions.forEach(a => a.style.display = 'none');
+                
+                // 移动端优化设置
+                const renderedCanvas = await html2canvas(canvas, {
+                    scale: 2, // 移动端使用2倍清晰度，平衡质量和性能
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    height: canvas.scrollHeight,
+                    windowHeight: canvas.scrollHeight,
+                    width: canvas.offsetWidth,
+                    imageTimeout: 30000
+                });
+                
+                // 恢复操作按钮
+                actions.forEach(a => a.style.display = '');
+                
+                // 生成PNG数据
+                const dataUrl = renderedCanvas.toDataURL('image/png', 1.0);
+                
+                // 创建下载链接
+                const link = document.createElement('a');
+                const timestamp = new Date().getTime();
+                link.download = `安行山河_${timestamp}.png`;
+                link.href = dataUrl;
+                
+                // 触发下载
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast('图片已导出！请查看下载或长按保存到相册', 'success');
+                
+            } catch (err) {
+                console.error('导出失败:', err);
+                showToast('导出失败：' + err.message, 'error');
+            }
+        }
+        
+        // 应用移动端缩放
+        function applyMobileScale() {
+            const canvas = document.getElementById('canvas');
+            const wrapper = document.querySelector('.canvas-wrapper');
+            
+            if (window.innerWidth <= 768 && wrapper && canvas) {
+                // 计算缩放比例，确保750px画布能在小屏幕上完整显示
+                const scale = (wrapper.clientWidth - 16) / 750;
+                canvas.style.transform = `scale(${scale})`;
+                canvas.style.transformOrigin = 'left top';
+                canvas.style.marginBottom = `${canvas.scrollHeight * (scale - 1)}px`;
+            } else {
+                canvas.style.transform = 'none';
+                canvas.style.marginBottom = '0';
+            }
+        }
+        
+        // 高亮动画样式
+        const highlightStyle = document.createElement('style');
+        highlightStyle.textContent = `
+            @keyframes highlightNew {
+                0% { box-shadow: 0 0 0 0 rgba(7, 193, 96, 0.5); }
+                50% { box-shadow: 0 0 0 10px rgba(7, 193, 96, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(7, 193, 96, 0); }
+            }
+        `;
+        document.head.appendChild(highlightStyle);
+        
         // 立即执行检测
         checkMobile();
-        window.addEventListener('resize', checkMobile);
+        applyMobileScale();
+        window.addEventListener('resize', () => {
+            checkMobile();
+            applyMobileScale();
+        });
     </script>
 </body>
 </html>
