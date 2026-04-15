@@ -61,6 +61,7 @@
             .canvas-wrapper {
                 padding: 8px;
                 overflow-x: auto;
+                overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
             }
             
@@ -3489,6 +3490,11 @@
             <span id="saveText">正在自动保存...</span>
         </div>
     </div>
+    
+    <!-- 移动端提示 -->
+    <div id="mobileHint" style="display: none; position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; z-index: 9999; white-space: nowrap;">
+        👆 左右滑动查看完整画布
+    </div>
 
     <!-- 工具栏 -->
     <div class="toolbar">
@@ -6131,6 +6137,7 @@
             const addBtn = document.getElementById('mobileAddBtn');
             const sidebar = document.querySelector('.sidebar');
             const mainContainer = document.querySelector('.main-container');
+            const mobileHint = document.getElementById('mobileHint');
             
             if (bottomBar) bottomBar.style.display = isMobile ? 'flex' : 'none';
             if (addBtn) addBtn.style.display = isMobile ? 'flex' : 'none';
@@ -6138,15 +6145,26 @@
             
             // 移动端调整画布缩放和底部padding
             if (isMobile) {
-                const canvas = document.getElementById('canvas');
-                const wrapper = document.querySelector('.canvas-wrapper');
-                if (canvas && wrapper) {
-                    const scale = (wrapper.clientWidth - 16) / 750;
-                    canvas.style.transform = `scale(${Math.min(scale, 1)})`;
-                }
+                applyMobileScale();
                 if (mainContainer) {
                     mainContainer.style.paddingBottom = '100px';
                 }
+                // 显示移动端提示
+                if (mobileHint) {
+                    mobileHint.style.display = 'block';
+                    // 3秒后自动隐藏
+                    setTimeout(() => {
+                        if (mobileHint) mobileHint.style.display = 'none';
+                    }, 3000);
+                }
+            } else {
+                // 桌面端重置画布样式
+                const canvas = document.getElementById('canvas');
+                if (canvas) {
+                    canvas.style.transform = 'none';
+                    canvas.style.marginBottom = '0';
+                }
+                if (mobileHint) mobileHint.style.display = 'none';
             }
         }
         
@@ -6218,28 +6236,39 @@
             // 添加模块
             addModule(type);
             
-            // 延迟滚动到新添加的模块（确保DOM已更新）
-            setTimeout(() => {
-                const canvas = document.getElementById('canvas');
-                const modules = canvas.querySelectorAll('.module');
-                if (modules.length > 0) {
-                    const lastModule = modules[modules.length - 1];
+            // 移动端特殊处理
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    const canvas = document.getElementById('canvas');
+                    const wrapper = document.querySelector('.canvas-wrapper');
+                    const modules = canvas.querySelectorAll('.module');
                     
-                    // 滚动到模块位置
-                    lastModule.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // 高亮新模块
-                    lastModule.style.animation = 'highlightNew 0.8s ease';
-                    setTimeout(() => {
-                        lastModule.style.animation = '';
-                    }, 800);
-                }
-                
-                // 重新应用移动端缩放
-                applyMobileScale();
-            }, 100);
-            
-            showToast('已添加模块');
+                    if (modules.length > 0 && wrapper) {
+                        const lastModule = modules[modules.length - 1];
+                        
+                        // 重新应用缩放（确保新模块也有正确的缩放）
+                        applyMobileScale();
+                        
+                        // 计算模块在缩放后的位置，并手动滚动
+                        const moduleRect = lastModule.getBoundingClientRect();
+                        const wrapperRect = wrapper.getBoundingClientRect();
+                        const scale = (wrapper.clientWidth - 16) / 750;
+                        
+                        // 滚动到模块底部
+                        const moduleBottom = lastModule.offsetTop + lastModule.offsetHeight;
+                        wrapper.scrollTo({
+                            top: moduleBottom * Math.min(scale, 1) - wrapper.clientHeight + 100,
+                            behavior: 'smooth'
+                        });
+                        
+                        // 高亮新模块
+                        lastModule.style.animation = 'highlightNew 0.8s ease';
+                        setTimeout(() => {
+                            lastModule.style.animation = '';
+                        }, 800);
+                    }
+                }, 150);
+            }
         }
         
         // 移动端一键导出到相册
@@ -6304,13 +6333,33 @@
             
             if (window.innerWidth <= 768 && wrapper && canvas) {
                 // 计算缩放比例，确保750px画布能在小屏幕上完整显示
-                const scale = (wrapper.clientWidth - 16) / 750;
-                canvas.style.transform = `scale(${scale})`;
+                const availableWidth = wrapper.clientWidth - 16;
+                const scale = availableWidth / 750;
+                const finalScale = Math.min(scale, 1); // 最大不放大
+                
+                // 使用 CSS transform 缩放画布
+                canvas.style.transform = `scale(${finalScale})`;
                 canvas.style.transformOrigin = 'left top';
-                canvas.style.marginBottom = `${canvas.scrollHeight * (scale - 1)}px`;
+                
+                // 调整画布宽度以适应缩放后的尺寸
+                // 这样可以让 wrapper 正确计算滚动区域
+                const scaledWidth = 750 * finalScale;
+                canvas.style.width = '750px';
+                canvas.style.maxWidth = 'none';
+                
+                // 确保 wrapper 可以横向滚动
+                wrapper.style.overflowX = 'auto';
+                
+                // 添加调试信息到控制台
+                console.log('Mobile scale applied:', {
+                    availableWidth,
+                    scale: finalScale,
+                    canvasWidth: canvas.offsetWidth,
+                    wrapperWidth: wrapper.clientWidth
+                });
             } else {
                 canvas.style.transform = 'none';
-                canvas.style.marginBottom = '0';
+                canvas.style.width = '750px';
             }
         }
         
