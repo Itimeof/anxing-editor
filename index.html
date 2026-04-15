@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>安行山河 · 微信编辑器（移动版）</title>
+    <title>安行山河 · 微信编辑器（移动完整版）</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- 引入图片压缩库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
@@ -27,30 +27,37 @@
             --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { -webkit-tap-highlight-color: transparent; }
         
-        body {
-            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--editor-bg);
-            overflow-x: hidden;
-            color: var(--text-main);
-            line-height: 1.6;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* 移动端适配样式 */
+        /* 移动端适配 */
         @media (max-width: 768px) {
-            /* 隐藏桌面端侧边栏 */
             .sidebar { display: none !important; }
             
-            /* 调整主容器 */
             .main-container {
                 margin-left: 0 !important;
-                padding-top: calc(60px + var(--safe-top));
-                padding-bottom: calc(70px + var(--safe-bottom));
+                padding-top: calc(44px + var(--safe-top));
+                padding-bottom: calc(80px + var(--safe-bottom));
             }
             
-            /* 画布缩放适配 */
+            .toolbar {
+                height: 44px;
+                padding: 0 12px;
+                padding-top: var(--safe-top);
+            }
+            
+            .toolbar .tools { display: none; }
+            
+            .wechat-tips {
+                position: fixed;
+                top: auto;
+                bottom: calc(70px + var(--safe-bottom));
+                left: 12px;
+                right: 12px;
+                padding: 8px 12px;
+                font-size: 11px;
+                border-radius: 8px;
+            }
+            
             .canvas-wrapper {
                 padding: 8px;
                 overflow-x: auto;
@@ -60,54 +67,52 @@
             .canvas {
                 width: 750px;
                 transform-origin: left top;
-                /* 根据屏幕宽度自动缩放 */
             }
             
-            /* 顶部工具栏适配 */
-            .toolbar {
-                height: 56px;
-                padding: 0 12px;
-                padding-top: var(--safe-top);
-            }
-            
-            .toolbar .brand {
-                font-size: 15px;
-            }
-            
-            .toolbar .brand span {
-                display: none;
-            }
-            
-            .toolbar .tools .btn {
-                padding: 6px 10px;
-                font-size: 12px;
-            }
-            
-            /* 微信提示栏适配 */
-            .wechat-tips {
-                top: calc(56px + var(--safe-top));
-                padding: 6px 12px;
-                font-size: 11px;
-            }
-            
-            /* 模块操作按钮优化 */
             .module-actions {
                 opacity: 1;
                 top: 4px;
                 right: 4px;
             }
             
-            .module-btn {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
+            /* 移动端底部工具栏 */
+            .mobile-bottom-bar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 64px;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(20px);
+                border-top: 1px solid var(--border);
+                padding: 8px 16px calc(8px + var(--safe-bottom));
+                z-index: 998;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
             }
             
-            /* 底部添加模块按钮 */
+            .bottom-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 16px;
+                border: none;
+                background: transparent;
+                color: var(--text-light);
+                font-size: 11px;
+                cursor: pointer;
+            }
+            
+            .bottom-btn .icon { font-size: 22px; }
+            .bottom-btn.primary { color: var(--wechat-green); }
+            
             .mobile-add-btn {
                 position: fixed;
-                bottom: calc(20px + var(--safe-bottom));
-                right: 20px;
+                bottom: calc(80px + var(--safe-bottom));
+                left: 50%;
+                transform: translateX(-50%);
                 width: 56px;
                 height: 56px;
                 background: var(--wechat-green);
@@ -120,113 +125,21 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                cursor: pointer;
-            }
-            
-            .mobile-add-btn:active {
-                transform: scale(0.95);
-            }
-            
-            /* 移动端模块抽屉 */
-            .mobile-drawer {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: white;
-                border-radius: 20px 20px 0 0;
-                transform: translateY(100%);
-                transition: transform 0.3s;
-                z-index: 2000;
-                max-height: 70vh;
-                display: flex;
-                flex-direction: column;
-            }
-            
-            .mobile-drawer.show {
-                transform: translateY(0);
-            }
-            
-            .drawer-header {
-                padding: 16px 20px;
-                border-bottom: 1px solid var(--border);
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            .drawer-content {
-                flex: 1;
-                overflow-y: auto;
-                padding: 16px;
-            }
-            
-            .category-tabs {
-                display: flex;
-                gap: 8px;
-                overflow-x: auto;
-                margin-bottom: 16px;
-                padding-bottom: 8px;
-            }
-            
-            .category-tab {
-                flex-shrink: 0;
-                padding: 8px 16px;
-                border: 1px solid var(--border);
-                border-radius: 20px;
-                font-size: 13px;
-                background: white;
-                cursor: pointer;
-            }
-            
-            .category-tab.active {
-                background: var(--accent);
-                color: white;
-                border-color: var(--accent);
-            }
-            
-            .module-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-            
-            .module-card {
-                padding: 16px;
-                border: 1px solid var(--border);
-                border-radius: 12px;
-                text-align: center;
-                cursor: pointer;
-            }
-            
-            .module-card:active {
-                background: var(--primary-bg);
-            }
-            
-            .module-card .icon {
-                font-size: 28px;
-                margin-bottom: 8px;
-            }
-            
-            .module-card .name {
-                font-size: 13px;
-                font-weight: 500;
-                margin-bottom: 4px;
-            }
-            
-            .module-card .desc {
-                font-size: 11px;
-                color: var(--text-light);
             }
         }
         
-        /* 桌面端隐藏移动端元素 */
         @media (min-width: 769px) {
-            .mobile-add-btn,
-            .mobile-drawer,
-            .mobile-overlay {
-                display: none !important;
-            }
+            .mobile-bottom-bar, .mobile-add-btn { display: none !important; }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--editor-bg);
+            overflow-x: hidden;
+            color: var(--text-main);
+            line-height: 1.6;
         }
 
         /* 微信运营提示栏 */
@@ -6088,107 +6001,42 @@
         });
     </script>
 
-    <!-- 移动端添加按钮 -->
-    <button class="mobile-add-btn" onclick="showMobileDrawer()" style="display: none;">+</button>
-    
-    <!-- 移动端模块抽屉 -->
-    <div class="mobile-overlay" id="mobileOverlay" onclick="hideMobileDrawer()" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1999;"></div>
-    
-    <div class="mobile-drawer" id="mobileDrawer">
-        <div class="drawer-header">
-            <h3>添加模块</h3>
-            <button onclick="hideMobileDrawer()" style="border: none; background: var(--primary-bg); width: 32px; height: 32px; border-radius: 50%; font-size: 16px;">✕</button>
-        </div>
-        <div class="drawer-content">
-            <div class="category-tabs">
-                <div class="category-tab active" onclick="switchCategory(this, 'wechat')">微信</div>
-                <div class="category-tab" onclick="switchCategory(this, 'route')">路线</div>
-                <div class="category-tab" onclick="switchCategory(this, 'trust')">信任</div>
-                <div class="category-tab" onclick="switchCategory(this, 'brand')">品牌</div>
-            </div>
-            <div class="module-grid" id="mobileModuleGrid">
-                <!-- 动态生成 -->
-            </div>
-        </div>
+    <!-- 移动端底部工具栏 -->
+    <div class="mobile-bottom-bar" id="mobileBottomBar" style="display: none;">
+        <button class="bottom-btn" onclick="showDataPanel()">
+            <span class="icon">📂</span>
+            <span>项目</span>
+        </button>
+        <button class="bottom-btn" onclick="undo()">
+            <span class="icon">↩️</span>
+            <span>撤销</span>
+        </button>
+        <button class="bottom-btn primary" onclick="showExportPanel()">
+            <span class="icon">⬆️</span>
+            <span>导出</span>
+        </button>
+        <button class="bottom-btn" onclick="showHelp()">
+            <span class="icon">❓</span>
+            <span>帮助</span>
+        </button>
     </div>
+    
+    <!-- 移动端添加按钮 -->
+    <button class="mobile-add-btn" id="mobileAddBtn" onclick="toggleSidebar()" style="display: none;">+</button>
 
     <script>
-        // 移动端模块数据
-        const MOBILE_MODULES = {
-            wechat: [
-                { type: 'wechat-cover', icon: '📷', name: '微信首图', desc: '公众号封面' },
-                { type: 'brand-quote', icon: '💬', name: '金句卡片', desc: '品牌金句' },
-                { type: 'text-only', icon: '📝', name: '纯文字', desc: '文字内容' }
-            ],
-            route: [
-                { type: 'schedule', icon: '📅', name: '行程时间轴', desc: 'Day by Day' },
-                { type: 'dates', icon: '📆', name: '排期安排', desc: '团期列表' },
-                { type: 'service', icon: '✓', name: '服务说明', desc: '服务清单' },
-                { type: 'gear', icon: '🎒', name: '装备建议', desc: '装备列表' },
-                { type: 'notice', icon: '⚠️', name: '注意事项', desc: '温馨提示' },
-                { type: 'price-detail', icon: '💰', name: '费用明细', desc: '费用说明' }
-            ],
-            trust: [
-                { type: 'host', icon: '👤', name: '领队介绍', desc: '领队信息' },
-                { type: 'service', icon: '📋', name: '服务说明', desc: '服务内容' },
-                { type: 'price-detail', icon: '💵', name: '费用说明', desc: '费用明细' }
-            ],
-            brand: [
-                { type: 'brand-quote', icon: '💭', name: '品牌金句', desc: '核心理念' },
-                { type: 'brand-open', icon: '◆', name: '品牌开场', desc: '文章开头' },
-                { type: 'brand-ending', icon: '◪', name: '品牌结尾', desc: '文章结尾' }
-            ]
-        };
-
-        // 显示移动端抽屉
-        function showMobileDrawer() {
-            document.getElementById('mobileOverlay').style.display = 'block';
-            document.getElementById('mobileDrawer').classList.add('show');
-            renderMobileModules('wechat');
-        }
-
-        // 隐藏移动端抽屉
-        function hideMobileDrawer() {
-            document.getElementById('mobileOverlay').style.display = 'none';
-            document.getElementById('mobileDrawer').classList.remove('show');
-        }
-
-        // 切换分类
-        function switchCategory(tab, category) {
-            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            renderMobileModules(category);
-        }
-
-        // 渲染模块网格
-        function renderMobileModules(category) {
-            const grid = document.getElementById('mobileModuleGrid');
-            const modules = MOBILE_MODULES[category] || [];
-            grid.innerHTML = modules.map(m => `
-                <div class="module-card" onclick="addModuleFromMobile('${m.type}')">
-                    <div class="icon">${m.icon}</div>
-                    <div class="name">${m.name}</div>
-                    <div class="desc">${m.desc}</div>
-                </div>
-            `).join('');
-        }
-
-        // 从移动端添加模块
-        function addModuleFromMobile(type) {
-            hideMobileDrawer();
-            addModule(type);
-            showToast('已添加模块');
-        }
-
-        // 检测是否为移动端并显示添加按钮
+        // 移动端检测和适配
         function checkMobile() {
             const isMobile = window.innerWidth <= 768;
-            const addBtn = document.querySelector('.mobile-add-btn');
-            if (addBtn) {
-                addBtn.style.display = isMobile ? 'flex' : 'none';
-            }
+            const bottomBar = document.getElementById('mobileBottomBar');
+            const addBtn = document.getElementById('mobileAddBtn');
+            const sidebar = document.querySelector('.sidebar');
             
-            // 移动端调整画布缩放
+            if (bottomBar) bottomBar.style.display = isMobile ? 'flex' : 'none';
+            if (addBtn) addBtn.style.display = isMobile ? 'flex' : 'none';
+            if (sidebar) sidebar.style.display = isMobile ? 'none' : 'block';
+            
+            // 画布缩放
             if (isMobile) {
                 const canvas = document.getElementById('canvas');
                 const wrapper = document.querySelector('.canvas-wrapper');
@@ -6198,8 +6046,22 @@
                 }
             }
         }
-
-        // 初始化
+        
+        // 切换侧边栏（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.style.display = sidebar.style.display === 'block' ? 'none' : 'block';
+                sidebar.style.position = 'fixed';
+                sidebar.style.top = '0';
+                sidebar.style.left = '0';
+                sidebar.style.width = '80%';
+                sidebar.style.height = '100%';
+                sidebar.style.zIndex = '2000';
+                sidebar.style.background = 'white';
+            }
+        }
+        
         window.addEventListener('load', checkMobile);
         window.addEventListener('resize', checkMobile);
     </script>
