@@ -6024,19 +6024,119 @@
     <!-- 移动端添加按钮 -->
     <button class="mobile-add-btn" id="mobileAddBtn" onclick="toggleSidebar()" style="display: none;">+</button>
 
+    <!-- 移动端模块抽屉 -->
+    <div class="mobile-drawer" id="mobileDrawer" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 20px 20px 0 0; z-index: 3000; max-height: 80vh; overflow-y: auto;">
+        <div style="padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-family: 'Noto Serif SC', serif;">添加模块</h3>
+            <button onclick="closeMobileDrawer()" style="border: none; background: var(--primary-bg); width: 36px; height: 36px; border-radius: 50%; font-size: 18px;">✕</button>
+        </div>
+        <div style="padding: 16px;">
+            <div style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px; padding-bottom: 8px;">
+                <button class="category-tab active" onclick="switchMobileCategory('wechat')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: var(--accent); color: white; white-space: nowrap;">微信</button>
+                <button class="category-tab" onclick="switchMobileCategory('brand')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">品牌</button>
+                <button class="category-tab" onclick="switchMobileCategory('emotion')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">情绪</button>
+                <button class="category-tab" onclick="switchMobileCategory('route')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">路线</button>
+                <button class="category-tab" onclick="switchMobileCategory('trust')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">信任</button>
+                <button class="category-tab" onclick="switchMobileCategory('operate')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">运营</button>
+                <button class="category-tab" onclick="switchMobileCategory('visual')" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: white; white-space: nowrap;">视觉</button>
+            </div>
+            <div id="mobileModuleGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+
     <script>
+        // 移动端模块数据
+        const MOBILE_MODULES = {
+            wechat: [
+                { type: 'wechat-cover', icon: '📷', name: '微信首图' },
+                { type: 'wechat-guide', icon: '📖', name: '阅读引导' },
+                { type: 'wechat-follow', icon: '➕', name: '关注引导' },
+                { type: 'wechat-share', icon: '↗️', name: '分享引导' }
+            ],
+            brand: [
+                { type: 'cover', icon: '🖼️', name: '电影感封面' },
+                { type: 'brand-open', icon: '◆', name: '品牌开场' },
+                { type: 'brand-divider', icon: '—', name: '分割线' },
+                { type: 'brand-quote', icon: '"', name: '品牌金句' },
+                { type: 'brand-manifesto', icon: '★', name: '品牌宣言' },
+                { type: 'brand-qr', icon: '◻️', name: '扫码关注' },
+                { type: 'brand-ending', icon: '◪', name: '品牌结尾' }
+            ],
+            emotion: [
+                { type: 'philosophy', icon: '✦', name: '开篇哲思' },
+                { type: 'quote-card', icon: '❝', name: '金句卡片' },
+                { type: 'transition', icon: '~', name: '情绪过渡' },
+                { type: 'scene', icon: '✿', name: '场景描写' },
+                { type: 'text-only', icon: '¶', name: '纯文字留白' },
+                { type: 'poetic', icon: '✾', name: '诗性表达' },
+                { type: 'question', icon: '?', name: '人生提问' },
+                { type: 'story-fragment', icon: '✎', name: '故事片段' }
+            ],
+            route: [
+                { type: 'schedule', icon: '◷', name: '行程时间轴' },
+                { type: 'daily-detail', icon: '📅', name: '详细日程' },
+                { type: 'dates', icon: '⚲', name: '排期安排' },
+                { type: 'data-grid', icon: '◫', name: '里程海拔' },
+                { type: 'difficulty', icon: '⚡', name: '难度说明' },
+                { type: 'gear', icon: '⚒', name: '装备建议' },
+                { type: 'notice', icon: '⚑', name: '注意事项' },
+                { type: 'safety', icon: '⚠️', name: '安全须知' },
+                { type: 'suitable', icon: '♥', name: '适合人群' },
+                { type: 'risk', icon: '⚠', name: '风险提示' }
+            ],
+            trust: [
+                { type: 'host', icon: '☺', name: '领队介绍' },
+                { type: 'concept', icon: '◈', name: '带队理念' },
+                { type: 'testimonial', icon: '❝', name: '队员反馈' },
+                { type: 'why', icon: '✓', name: '为什么跟你' },
+                { type: 'small-group', icon: '◎', name: '小团优势' },
+                { type: 'service', icon: '✦', name: '服务说明' },
+                { type: 'price-detail', icon: '☐', name: '费用明细' },
+                { type: 'price-display', icon: '$', name: '价格展示' },
+                { type: 'process', icon: '→', name: '报名流程' },
+                { type: 'cta', icon: '➤', name: '行动召唤' }
+            ],
+            operate: [
+                { type: 'diary', icon: '✎', name: '带队日记' },
+                { type: 'story', icon: '✾', name: '队员故事' },
+                { type: 'knowledge', icon: '✿', name: '户外知识' },
+                { type: 'reflection', icon: '○', name: '哲思感悟' },
+                { type: 'travel-story', icon: '✈', name: '旅行故事' },
+                { type: 'thought', icon: '◉', name: '领队思考' },
+                { type: 'observation', icon: '◎', name: '山野观察' },
+                { type: 'portrait', icon: '☐', name: '人物记录' },
+                { type: 'fragment', icon: '✂', name: '碎片记录' }
+            ],
+            visual: [
+                { type: 'split', icon: '❖', name: '图文分栏' },
+                { type: 'fullimage', icon: '▣', name: '全幅大图' },
+                { type: 'dual-image', icon: '▦', name: '双图并排' },
+                { type: 'tri-image', icon: '▧', name: '三图网格' },
+                { type: 'bg-card', icon: '▩', name: '背景卡片' },
+                { type: 'caption-image', icon: '▣', name: '左下角图文' },
+                { type: 'text-card', icon: '▨', name: '文字卡片' },
+                { type: 'divider', icon: '—', name: '装饰分割线' },
+                { type: 'spacer', icon: '○', name: '留白模块' },
+                { type: 'title', icon: 'T', name: '标题模块' },
+                { type: 'numbered', icon: '1.', name: '编号模块' }
+            ]
+        };
+
         // 移动端检测和适配
         function checkMobile() {
             const isMobile = window.innerWidth <= 768;
             const bottomBar = document.getElementById('mobileBottomBar');
             const addBtn = document.getElementById('mobileAddBtn');
             const sidebar = document.querySelector('.sidebar');
+            const mainContainer = document.querySelector('.main-container');
             
             if (bottomBar) bottomBar.style.display = isMobile ? 'flex' : 'none';
             if (addBtn) addBtn.style.display = isMobile ? 'flex' : 'none';
             if (sidebar) sidebar.style.display = isMobile ? 'none' : 'block';
             
-            // 画布缩放
+            // 移动端调整画布缩放和底部padding
             if (isMobile) {
                 const canvas = document.getElementById('canvas');
                 const wrapper = document.querySelector('.canvas-wrapper');
@@ -6044,25 +6144,59 @@
                     const scale = (wrapper.clientWidth - 16) / 750;
                     canvas.style.transform = `scale(${Math.min(scale, 1)})`;
                 }
+                if (mainContainer) {
+                    mainContainer.style.paddingBottom = '100px';
+                }
             }
         }
         
-        // 切换侧边栏（移动端）
+        // 打开移动端抽屉
         function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                sidebar.style.display = sidebar.style.display === 'block' ? 'none' : 'block';
-                sidebar.style.position = 'fixed';
-                sidebar.style.top = '0';
-                sidebar.style.left = '0';
-                sidebar.style.width = '80%';
-                sidebar.style.height = '100%';
-                sidebar.style.zIndex = '2000';
-                sidebar.style.background = 'white';
+            const drawer = document.getElementById('mobileDrawer');
+            if (drawer) {
+                drawer.style.display = drawer.style.display === 'block' ? 'none' : 'block';
+                if (drawer.style.display === 'block') {
+                    switchMobileCategory('wechat');
+                }
             }
         }
         
-        window.addEventListener('load', checkMobile);
+        // 关闭移动端抽屉
+        function closeMobileDrawer() {
+            const drawer = document.getElementById('mobileDrawer');
+            if (drawer) drawer.style.display = 'none';
+        }
+        
+        // 切换分类
+        function switchMobileCategory(category) {
+            // 更新标签样式
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.style.background = 'white';
+                tab.style.color = 'inherit';
+            });
+            event.target.style.background = 'var(--accent)';
+            event.target.style.color = 'white';
+            
+            // 渲染模块
+            const grid = document.getElementById('mobileModuleGrid');
+            const modules = MOBILE_MODULES[category] || [];
+            grid.innerHTML = modules.map(m => `
+                <div onclick="addMobileModule('${m.type}')" style="padding: 16px; border: 1px solid var(--border); border-radius: 12px; text-align: center; cursor: pointer; background: white;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">${m.icon}</div>
+                    <div style="font-size: 13px; font-weight: 500;">${m.name}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 添加模块
+        function addMobileModule(type) {
+            closeMobileDrawer();
+            addModule(type);
+            showToast('已添加模块');
+        }
+        
+        // 立即执行检测
+        checkMobile();
         window.addEventListener('resize', checkMobile);
     </script>
 </body>
